@@ -3,12 +3,14 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 1200px; /* Set fixed width */
+  height: 800px; /* Set fixed height */
 }
 
 .table-image {
   display: block;
-  max-width: 100%;
-  height: auto;
+  width: 100%; /* Ensure it matches the container */
+  height: 100%; /* Ensure it matches the container */
 }
 
 .table-overlay {
@@ -20,6 +22,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 90%; /* Ensure it matches the container */
+  height: 90%; /* Ensure it matches the container */
 }
 
 th,
