@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { data } from "./mockData";
 import "./ResizableTable.css";
 import tableImage from "./tableImage.png";
@@ -52,60 +52,34 @@ interface Data {
 }
 
 const ResizableTable: React.FC = () => {
-  useEffect(() => {
-    const addResizeListeners = () => {
-      const handles = document.querySelectorAll(".resize-handle");
+  const imageWidth = 1100; // Actual width of the image in pixels
+  const imageHeight = 800; // Actual height of the image in pixels
 
-      handles.forEach((handle) => {
-        handle.addEventListener("mousedown", (e: MouseEvent) => {
-          const cell = (e.target as HTMLElement).parentElement as HTMLElement;
-          const startX = e.pageX;
-          const startY = e.pageY;
-          const startWidth = parseInt(window.getComputedStyle(cell).width, 10);
-          const startHeight = parseInt(window.getComputedStyle(cell).height, 10);
+  const jsonWidth = data.SignatureSheet.Pages[0].Width; // Width from JSON
+  const jsonHeight = data.SignatureSheet.Pages[0].Height; // Height from JSON
 
-          const doDrag = (e: MouseEvent) => {
-            const newWidth = startWidth + e.pageX - startX;
-            const newHeight = startHeight + e.pageY - startY;
-            if (newWidth > 0) {
-              cell.style.width = `${newWidth}px`;
-            }
-            if (newHeight > 0) {
-              cell.style.height = `${newHeight}px`;
-            }
-          };
-
-          const stopDrag = () => {
-            document.documentElement.removeEventListener("mousemove", doDrag);
-            document.documentElement.removeEventListener("mouseup", stopDrag);
-          };
-
-          document.documentElement.addEventListener("mousemove", doDrag);
-          document.documentElement.addEventListener("mouseup", stopDrag);
-        });
-      });
-    };
-
-    addResizeListeners();
-  }, []);
+  const scaleX = imageWidth / jsonWidth;
+  const scaleY = imageHeight / jsonHeight;
 
   const renderCell = (cell: Cell, rowIndex: number) => (
-    <td
+    <div
       key={`${rowIndex}-${cell.ColumnIndex}`}
       style={{
-        width: `${(cell.Right - cell.Left) * 40}px`, // Assuming 1 unit in JSON equals 10px
-        height: `${(cell.Bottom - cell.Top) * 40}px`, // Assuming 1 unit in JSON equals 10px
+        position: "absolute",
+        left: `${cell.Left * scaleX}px`,
+        top: `${cell.Top * scaleY}px`,
+        width: `${(cell.Right - cell.Left) * scaleX}px`,
+        height: `${(cell.Bottom - cell.Top) * scaleY}px`,
+        border: "3px solid red",
+        boxSizing: "border-box",
       }}
-    >
-      <div className="resize-handle right"></div>
-      <div className="resize-handle bottom"></div>
-    </td>
+    ></div>
   );
 
-  const renderRow = (row: Row) => (
-    <tr key={row.RowNumber}>
-      {row.Cells.map((cell, cellIndex) => renderCell(cell, row.RowNumber))}
-    </tr>
+  const renderRow = (row: Row, rowIndex: number) => (
+    <React.Fragment key={row.RowNumber}>
+      {row.Cells.map((cell, cellIndex) => renderCell(cell, rowIndex))}
+    </React.Fragment>
   );
 
   return (
@@ -113,17 +87,7 @@ const ResizableTable: React.FC = () => {
       <div className="table-background">
         <img src={tableImage} alt="background" className="table-image" />
         <div className="table-overlay">
-          <table className="table table-bordered">
-            <thead>
-              <tr>
-                <th>#</th>
-                {data.Columns.map((_, index) => (
-                  <th key={index}></th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>{data.Rows.map((row) => renderRow(row))}</tbody>
-          </table>
+          {data.Rows.map((row, rowIndex) => renderRow(row, rowIndex))}
         </div>
       </div>
     </div>
