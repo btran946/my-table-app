@@ -3,54 +3,6 @@ import { data } from "./mockData";
 import "./ResizableTable.css";
 import tableImage from "./tableImage.png";
 
-interface Cell {
-  Left: number;
-  Top: number;
-  Right: number;
-  Bottom: number;
-  Value: string;
-  Content: string;
-  IsReviewed: boolean;
-  ColumnIndex?: number;
-  RowIndex?: number;
-  ColumnSpan?: number;
-  RowSpan?: number;
-}
-
-interface Row {
-  Left: number;
-  Top: number;
-  Right: number;
-  Bottom: number;
-  IsReviewed: boolean;
-  RowNumber: number;
-  RowIndex?: number;
-  Cells: Cell[];
-}
-
-interface Data {
-  SignatureSheetId: number;
-  PageNumber: number;
-  SignatureSheet: {
-    Id: number;
-    SheetNumber: number;
-    Pages: { PageNumber: number; Height: number; Width: number }[];
-  };
-  Rows: Row[];
-  Columns: {
-    ColumnIndex: number;
-    Left: number;
-    Top: number;
-    Right: number;
-    Bottom: number;
-  }[];
-  Cells: Cell[];
-  Left: number;
-  Top: number;
-  Right: number;
-  Bottom: number;
-}
-
 const ResizableTable: React.FC = () => {
   const imageWidth = 1100; // Actual width of the image in pixels
   const imageHeight = 800; // Actual height of the image in pixels
@@ -61,8 +13,8 @@ const ResizableTable: React.FC = () => {
   const scaleX = imageWidth / jsonWidth;
   const scaleY = imageHeight / jsonHeight;
 
-  const renderCell = (cell: Cell, rowIndex: number) => (
-    <div
+  const renderCell = (cell, rowIndex) => (
+    <td
       key={`${rowIndex}-${cell.ColumnIndex}`}
       style={{
         position: "absolute",
@@ -73,22 +25,24 @@ const ResizableTable: React.FC = () => {
         border: "3px solid red",
         boxSizing: "border-box",
       }}
-    ></div>
+    ></td>
   );
 
-  const renderRow = (row: Row, rowIndex: number) => (
-    <React.Fragment key={row.RowNumber}>
+  const renderRow = (row, rowIndex) => (
+    <tr key={row.RowNumber}>
       {row.Cells.map((cell, cellIndex) => renderCell(cell, rowIndex))}
-    </React.Fragment>
+    </tr>
   );
 
   return (
-    <div className="container mt-5">
-      <div className="table-background">
-        <img src={tableImage} alt="background" className="table-image" />
-        <div className="table-overlay">
-          {data.Rows.map((row, rowIndex) => renderRow(row, rowIndex))}
-        </div>
+    <div className='container mt-5'>
+      <div className='table-background'>
+        <img src={tableImage} alt='background' className='table-image' />
+        <table className='table-overlay'>
+          <tbody>
+            {data.Rows.map((row, rowIndex) => renderRow(row, rowIndex))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
