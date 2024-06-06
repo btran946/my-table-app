@@ -24,6 +24,7 @@ export const data = {
             "Right": 32.6281,
             "Bottom": 10.896,
             "IsReviewed": false,
+            "RowIndex": 0, // Added RowIndex
             "RowNumber": 1,
             "Cells": [
                 {
@@ -35,6 +36,7 @@ export const data = {
                     "Content": "1",
                     "IsReviewed": false,
                     "ColumnIndex": 0, // Added ColumnIndex
+                    "RowIndex": 0, // Added RowIndex
                     "ColumnSpan": 1,
                     "RowSpan": 1
                 },
@@ -47,6 +49,7 @@ export const data = {
                     "Content": "oldal Jenkins",
                     "IsReviewed": false,
                     "ColumnIndex": 1,
+                    "RowIndex": 0, // Added RowIndex
                     "ColumnSpan": 1,
                     "RowSpan": 1
                 },
@@ -59,6 +62,7 @@ export const data = {
                     "Content": "Golda J Jenkins",
                     "IsReviewed": false,
                     "ColumnIndex": 2,
+                    "RowIndex": 0, // Added RowIndex
                     "ColumnSpan": 1,
                     "RowSpan": 1
                 },
@@ -72,6 +76,7 @@ export const data = {
                     "IsReviewed": false,
                     "ColumnIndex": 3,
                     "ColumnSpan": 1,
+                    "RowIndex": 0, // Added RowIndex
                     "RowSpan": 1
                 },
                 {
@@ -83,6 +88,7 @@ export const data = {
                     "Content": "3/8/20",
                     "IsReviewed": false,
                     "ColumnIndex": 4,
+                    "RowIndex": 0, // Added RowIndex
                     "ColumnSpan": 1,
                     "RowSpan": 1
                 }
