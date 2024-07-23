@@ -35,7 +35,6 @@ const ResizableTable: React.FC = () => {
 
   const scaleX = imageWidth / jsonWidth;
   const scaleY = imageHeight / jsonHeight;
-
   const resizableContainerStyles: React.CSSProperties = {
     position: "absolute",
     left: `${data.Left * scaleX}px`,
@@ -96,15 +95,15 @@ const ResizableTable: React.FC = () => {
     });
   };
 
-  const handleRowResizeStop = () => {
+  const handleRowResizeStop = (delta: number) => {
     let newCells = [];
     const updatedRows = data.Rows.map((row, index) => {
       const rowRef = rowRefs.current[index];
       if (rowRef && rowRef.current) {
-        const rect = rowRef.current.getBoundingClientRect();
+        const rowElement = rowRef.current;
 
-        const newTop = rect.top / scaleY;
-        const newBottom = rect.bottom / scaleY;
+        const newBottom = rowElement.getBoundingClientRect().bottom / scaleY;
+        const newTop = rowElement.getBoundingClientRect().top / scaleY;
 
         const updatedCells = row.Cells.map((cell) => {
           return {
@@ -113,7 +112,7 @@ const ResizableTable: React.FC = () => {
             Bottom: newBottom,
           };
         });
-        // Return the updated row with updated cells
+
         newCells = [...newCells, updatedCells];
         return {
           ...row,
@@ -174,23 +173,25 @@ const ResizableTable: React.FC = () => {
 
   const renderTableFromRows = (row, rowIndex: number) => (
     <React.Fragment key={row.RowNumber}>
-      {row.Cells.map((cell, cellIndex: number) => (
-        <div
-          key={`${rowIndex}-${cellIndex}`}
-          style={{
-            position: "absolute",
-            left: `${cell.Left * scaleX}px`,
-            top: `${cell.Top * scaleY}px`,
-            width: `${(cell.Right - cell.Left) * scaleX}px`,
-            height: `${(cell.Bottom - cell.Top) * scaleY}px`,
-            border: "3px solid red",
-            boxSizing: "border-box",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        ></div>
-      ))}
+      {row.Cells.map((cell, cellIndex: number) => {
+        return (
+          <div
+            key={`${rowIndex}-${cellIndex}`}
+            style={{
+              position: "absolute",
+              left: `${cell.Left * scaleX}px`,
+              top: `${cell.Top * scaleY}px`,
+              width: `${(cell.Right - cell.Left) * scaleX}px`,
+              height: `${(cell.Bottom - cell.Top) * scaleY}px`,
+              border: "3px solid red",
+              boxSizing: "border-box",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          ></div>
+        );
+      })}
     </React.Fragment>
   );
 
@@ -204,7 +205,7 @@ const ResizableTable: React.FC = () => {
             height: `${(data.Bottom - data.Top) * scaleY}px`,
           }}
           enable={{ bottom: true, right: true }}
-          onResizeStop={() => handleRowResizeStop()}
+          onResizeStop={(e, dir, ref, delta) => handleRowResizeStop(delta)}
           onResizeStart={(e, direction) => {
             if (direction === "bottom") {
               setHideColumns(true);
@@ -229,20 +230,18 @@ const ResizableTable: React.FC = () => {
           >
             {renderColumns()}
           </Container>
-
-          {showUpdatedData && (
-            <div
-              style={{
-                position: "absolute",
-                top: -240,
-                left: -55,
-              }}
-            >
-              {data.Rows.map((row, rowIndex) =>
-                renderTableFromRows(row, rowIndex)
-              )}
-            </div>
-          )}
+          
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+            }}
+          >
+            {data.Rows.map((row, rowIndex) =>
+              renderTableFromRows(row, rowIndex)
+            )}
+          </div>
         </Resizable>
       </div>
 
