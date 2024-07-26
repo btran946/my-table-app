@@ -3,13 +3,18 @@ import { data as initialData } from "./mockDataWithIndex";
 import "./ResizableTable.css";
 import tableImage from "./tableImage.png";
 import { Resizable } from "re-resizable";
-import { Container, Section, Bar, ColumnResizer } from "@column-resizer/react";
-import { Cell, Data, Row } from "./types";
+import {
+  Container,
+  Section,
+  Bar,
+  ColumnResizer,
+  Resizer,
+} from "@column-resizer/react";
 
 const barWidth = 3;
 
 const ResizableTable: React.FC = () => {
-  const [data, setData] = useState<Data>(initialData);
+  const [data, setData] = useState(initialData);
 
   const imageWidth = 1100; // Actual width of the image in pixels
   const imageHeight = 800; // Actual height of the image in pixels
@@ -116,34 +121,71 @@ const ResizableTable: React.FC = () => {
     });
   };
 
-  const handleEdgeResizeStop = (currentSize: number) => {
+  const updateTotalWidth = (resizer: Resizer) => {
+    let totalWidth = 0;
+    columnRefs.current.forEach((column, index) => {
+      totalWidth += resizer.getSectionSize(index + 1) + barWidth;
+    });
+    setColumnsTotalWidth(totalWidth);
+  };
+
+  const handleLeftEdgeResize = (resizer: Resizer) => {
+    if (resizer.isSectionResized(0)) {
+      const newLeft = resizer.getSectionSize(0);
+      setData((prevData) => {
+        const newData = { ...prevData };
+        newData.Left = newLeft;
+        return newData;
+      });
+    }
+  };
+
+  const handleRightEdgeResize = (resizer: Resizer) => {
+    if (resizer.isSectionResized(columnRefs.current.length + 1)) {
+      const lastIndex = columnRefs.current.length - 1;
+      const lastColumn = columnRefs.current[lastIndex].current;
+      if (lastColumn) {
+        setData((prevData) => {
+          const newData = { ...prevData };
+          const newRightContainer =
+            lastColumn.offsetLeft + lastColumn.offsetWidth;
+          newData.Right = newRightContainer / scaleX;
+          return newData;
+        });
+      }
+    }
+  };
+
+  const handleLeftEdgeResizeStop = (currentSize: number) => {
     setResizableContainerLeft(currentSize);
     setResizableContainerWidth(columnsTotalWidth);
   };
 
-  const handleRowResizeStop = () => {
+  const handleRowResizeStop = (elementRef: HTMLElement) => {
+    const newBottom = (elementRef.offsetTop + elementRef.offsetHeight) / scaleY;
     let newCells = [];
     const updatedRows = data.Rows.map((row, index) => {
       const rowRef = rowRefs.current[index];
       if (rowRef && rowRef.current) {
         const rowElement = rowRef.current;
 
-        const newBottom = rowElement.getBoundingClientRect().bottom / scaleY;
-        const newTop = rowElement.getBoundingClientRect().top / scaleY;
+        const newCellBottom =
+          (rowElement.offsetTop + rowElement.offsetHeight) / scaleY;
+
+        const newTop = rowElement.offsetTop / scaleY;
 
         const updatedCells = row.Cells.map((cell) => {
           return {
             ...cell,
             Top: newTop,
-            Bottom: newBottom,
+            Bottom: newCellBottom,
           };
         });
-
         newCells = [...newCells, updatedCells];
         return {
           ...row,
           Top: newTop,
-          Bottom: newBottom,
+          Bottom: newCellBottom,
           Cells: updatedCells,
         };
       }
@@ -152,7 +194,12 @@ const ResizableTable: React.FC = () => {
     });
 
     setData((prevData) => {
-      return { ...prevData, Rows: updatedRows, Cells: newCells };
+      return {
+        ...prevData,
+        Rows: updatedRows,
+        Cells: newCells,
+        Bottom: newBottom,
+      };
     });
     setHideColumns(false);
     if (rowsContainerRef.current && columnsContainerRef.current) {
@@ -168,11 +215,12 @@ const ResizableTable: React.FC = () => {
           defaultSize={(column.Right - column.Left) * scaleX}
           onSizeChanged={() => handleColumnResizeStop(index)}
         />
-
-        <Bar
-          size={barWidth}
-          style={{ background: "red", cursor: "col-resize" }}
-        />
+        {index !== data.Columns.length - 1 && (
+          <Bar
+            size={barWidth}
+            style={{ background: "red", cursor: "col-resize" }}
+          />
+        )}
       </React.Fragment>
     ));
   };
@@ -230,9 +278,9 @@ const ResizableTable: React.FC = () => {
             width: resizableContainerWidth,
             height: resizableContainerHeight,
           }}
-          enable={{ bottom: true, top: true }}
+          enable={{ top: true }}
           onResizeStop={(e, direction, elementRef, delta) => {
-            handleRowResizeStop();
+            handleRowResizeStop(elementRef);
             setResizableContainerHeight((prev) => prev + delta.height);
           }}
           onResizeStart={() => setHideColumns(true)}
@@ -245,8 +293,6 @@ const ResizableTable: React.FC = () => {
             <div
               style={{
                 position: "absolute",
-                top: 100,
-                left: 0,
               }}
             >
               {data.Rows.map((row, rowIndex) =>
@@ -261,11 +307,9 @@ const ResizableTable: React.FC = () => {
             columnResizerRef={ResizerRef}
             className='resize-container'
             beforeApplyResizer={(resizer) => {
-              let totalWidth = 0;
-              columnRefs.current.forEach((column, index) => {
-                totalWidth += resizer.getSectionSize(index + 1) + barWidth;
-              });
-              setColumnsTotalWidth(totalWidth);
+              updateTotalWidth(resizer);
+              handleLeftEdgeResize(resizer);
+              handleRightEdgeResize(resizer);
             }}
             afterResizing={() => setHideRows(false)}
             style={{
@@ -278,15 +322,19 @@ const ResizableTable: React.FC = () => {
           >
             <Section
               defaultSize={hiddenColumnWidth}
-              onSizeChanged={handleEdgeResizeStop}
+              onSizeChanged={(currentSize) => {
+                handleLeftEdgeResizeStop(currentSize);
+              }}
             />
             <Bar
               size={barWidth}
               style={{ background: "red", cursor: "col-resize" }}
             />
-
             {renderColumns()}
-
+            <Bar
+              size={barWidth}
+              style={{ background: "red", cursor: "col-resize" }}
+            />
             <Section defaultSize={hiddenColumnWidth} />
           </Container>
         </div>
